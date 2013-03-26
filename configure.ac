@@ -76,6 +76,7 @@ LIBDRM_NVVIEUX_REQUIRED=2.4.66
 LIBDRM_NOUVEAU_REQUIRED=2.4.66
 LIBDRM_FREEDRENO_REQUIRED=2.4.67
 LIBDRM_VC4_REQUIRED=2.4.69
+LIBDRM_TEGRA_REQUIRED=2.4.58
 DRI2PROTO_REQUIRED=2.6
 DRI3PROTO_REQUIRED=1.0
 PRESENTPROTO_REQUIRED=1.0
@@ -977,7 +978,7 @@ GALLIUM_DRIVERS_DEFAULT="r300,r600,svga,swrast"
 AC_ARG_WITH([gallium-drivers],
     [AS_HELP_STRING([--with-gallium-drivers@<:@=DIRS...@:>@],
         [comma delimited Gallium drivers list, e.g.
-        "i915,ilo,nouveau,r300,r600,radeonsi,freedreno,svga,swrast,vc4,virgl"
+        "i915,ilo,nouveau,r300,r600,radeonsi,freedreno,svga,swrast,tegra,vc4,virgl"
         @<:@default=r300,r600,svga,swrast@:>@])],
     [with_gallium_drivers="$withval"],
     [with_gallium_drivers="$GALLIUM_DRIVERS_DEFAULT"])
@@ -2436,6 +2437,12 @@ if test -n "$with_gallium_drivers"; then
             gallium_require_drm "freedreno"
             gallium_require_drm_loader
             ;;
+        xtegra)
+            HAVE_GALLIUM_TEGRA=yes
+            PKG_CHECK_MODULES([TEGRA], [libdrm_tegra >= $LIBDRM_TEGRA_REQUIRED])
+            gallium_require_drm "tegra"
+            gallium_require_drm_loader
+            ;;
         xswrast)
             HAVE_GALLIUM_SOFTPIPE=yes
             if test "x$MESA_LLVM" = x1; then
@@ -2550,6 +2557,7 @@ AM_CONDITIONAL(HAVE_GALLIUM_RADEON_COMMON, test "x$HAVE_GALLIUM_R600" = xyes -o 
                                                 "x$HAVE_GALLIUM_RADEONSI" = xyes)
 AM_CONDITIONAL(HAVE_GALLIUM_NOUVEAU, test "x$HAVE_GALLIUM_NOUVEAU" = xyes)
 AM_CONDITIONAL(HAVE_GALLIUM_FREEDRENO, test "x$HAVE_GALLIUM_FREEDRENO" = xyes)
+AM_CONDITIONAL(HAVE_GALLIUM_TEGRA, test "x$HAVE_GALLIUM_TEGRA" = xyes)
 AM_CONDITIONAL(HAVE_GALLIUM_SOFTPIPE, test "x$HAVE_GALLIUM_SOFTPIPE" = xyes)
 AM_CONDITIONAL(HAVE_GALLIUM_LLVMPIPE, test "x$HAVE_GALLIUM_LLVMPIPE" = xyes)
 AM_CONDITIONAL(HAVE_GALLIUM_SWR, test "x$HAVE_GALLIUM_SWR" = xyes)
@@ -2692,6 +2700,7 @@ AC_CONFIG_FILES([Makefile
 		src/gallium/drivers/softpipe/Makefile
 		src/gallium/drivers/svga/Makefile
 		src/gallium/drivers/swr/Makefile
+		src/gallium/drivers/tegra/Makefile
 		src/gallium/drivers/trace/Makefile
 		src/gallium/drivers/vc4/Makefile
 		src/gallium/drivers/virgl/Makefile
@@ -2734,6 +2743,7 @@ AC_CONFIG_FILES([Makefile
 		src/gallium/winsys/sw/null/Makefile
 		src/gallium/winsys/sw/wrapper/Makefile
 		src/gallium/winsys/sw/xlib/Makefile
+		src/gallium/winsys/tegra/drm/Makefile
 		src/gallium/winsys/vc4/drm/Makefile
 		src/gallium/winsys/virgl/drm/Makefile
 		src/gallium/winsys/virgl/vtest/Makefile
