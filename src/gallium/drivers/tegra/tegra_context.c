@@ -134,6 +134,8 @@ struct pipe_context *tegra_screen_context_create(struct pipe_screen *pscreen,
 		return NULL;
 	}
 
+	util_slab_create(&context->transfer_pool, sizeof(struct pipe_transfer), 16, UTIL_SLAB_SINGLETHREADED);
+
 	context->base.destroy = tegra_context_destroy;
 	context->base.flush = tegra_context_flush;
 

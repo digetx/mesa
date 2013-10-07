@@ -1,6 +1,8 @@
 #ifndef TEGRA_CONTEXT_H
 #define TEGRA_CONTEXT_H
 
+#include "util/u_slab.h"
+
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
 
@@ -24,6 +26,8 @@ struct tegra_context {
 	struct tegra_channel *gr3d;
 
 	struct tegra_framebuffer_state framebuffer;
+
+	struct util_slab_mempool transfer_pool;
 
 	struct tegra_vertex_state *vs;
 	struct tegra_vertexbuf_state vbs;

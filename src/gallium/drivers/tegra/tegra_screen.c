@@ -181,7 +181,7 @@ static int tegra_screen_get_param(struct pipe_screen *pscreen,
 		return 0;
 
 	case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
-		return 0;
+		return 1;
 
 	default:
 		fprintf(stdout, "  unsupported parameter: %d\n", param);
