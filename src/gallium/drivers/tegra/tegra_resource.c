@@ -4,6 +4,7 @@
 #include "util/u_inlines.h"
 #include "util/u_pack_color.h"
 #include "util/u_transfer.h"
+#include "util/u_clear.h"
 
 #include "tegra_context.h"
 #include "tegra_resource.h"
@@ -465,35 +466,7 @@ static void tegra_clear(struct pipe_context *pcontext, unsigned int buffers,
 			const union pipe_color_union *color, double depth,
 			unsigned int stencil)
 {
-	struct tegra_context *context = tegra_context(pcontext);
-	struct pipe_framebuffer_state *fb;
-
-	fprintf(stdout, "> %s(pcontext=%p, buffers=%x, color=%p, depth=%f, stencil=%u)\n",
-		__func__, pcontext, buffers, color, depth, stencil);
-
-	fb = &context->framebuffer.base;
-
-	if (buffers & PIPE_CLEAR_COLOR) {
-		int i;
-		for (i = 0; i < fb->nr_cbufs; ++i) {
-			struct pipe_surface *dst = fb->cbufs[i];
-			if (tegra_fill(context->gr2d, tegra_resource(dst->texture),
-			    pack_color(dst->format, color->f), util_format_get_blocksize(dst->format),
-			    0, 0, dst->width, dst->height) < 0)
-				goto out;
-		}
-	}
-
-	if (buffers & PIPE_CLEAR_DEPTH || buffers & PIPE_CLEAR_STENCIL) {
-		if (tegra_fill(context->gr2d, tegra_resource(fb->zsbuf->texture),
-		    util_pack_z_stencil(depth, stencil, fb->zsbuf->format),
-		    util_format_get_blocksize(fb->zsbuf->format),
-		    0, 0, fb->zsbuf->width, fb->zsbuf->height) < 0)
-			goto out;
-	}
-
-out:
-	fprintf(stdout, "< %s()\n", __func__);
+	util_clear(pcontext, &tegra_context(pcontext)->framebuffer.base, buffers, color, depth, stencil);
 }
 
 static void tegra_clear_render_target(struct pipe_context *pipe,
