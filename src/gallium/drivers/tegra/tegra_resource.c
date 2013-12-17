@@ -140,9 +140,11 @@ tegra_resource_transfer_flush_region(struct pipe_context *pcontext,
 static void tegra_resource_transfer_unmap(struct pipe_context *pcontext,
 					  struct pipe_transfer *transfer)
 {
+	struct tegra_context *context = tegra_context(pcontext);
 	fprintf(stdout, "> %s(pcontext=%p, transfer=%p)\n", __func__, pcontext,
 		transfer);
 	drm_tegra_bo_unmap(tegra_resource(transfer->resource)->bo);
+	util_slab_free(&context->transfer_pool, transfer);
 	fprintf(stdout, "< %s()\n", __func__);
 }
 
