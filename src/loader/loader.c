@@ -275,7 +275,7 @@ drm_get_pci_id_for_fd(int fd, int *vendor_id, int *chip_id)
    drmDevicePtr device;
    int ret;
 
-   if (drmGetDevice(fd, &device) == 0) {
+   if (drmGetDevice(fd, &device) == 0 && device != NULL) {
       if (device->bustype == DRM_BUS_PCI) {
          *vendor_id = device->deviceinfo.pci->vendor_id;
          *chip_id = device->deviceinfo.pci->device_id;
