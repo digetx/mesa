@@ -374,8 +374,7 @@ static int tegra_fill(struct tegra_channel *gr2d,
 		value |= 2 << 16;
 		break;
 	default:
-		assert(0);
-		goto out;
+		unreachable("invalid blocksize");
 	}
 	tegra_stream_push(&gr2d->stream, value);           /* 0x01f - controlmain */
 
@@ -395,7 +394,6 @@ static int tegra_fill(struct tegra_channel *gr2d,
 	tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x38, 0x05));
 	tegra_stream_push(&gr2d->stream, height << 16 | width); /* 0x038 - dstsize */
 	tegra_stream_push(&gr2d->stream, dsty << 16 | dstx);    /* 0x03a - dstps */
-out:
 	tegra_stream_end(&gr2d->stream);
 
 	err = tegra_stream_flush(&gr2d->stream);
