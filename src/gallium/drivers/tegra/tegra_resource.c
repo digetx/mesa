@@ -196,6 +196,13 @@ tegra_screen_resource_create(struct pipe_screen *pscreen,
       resource->pitch = align(resource->pitch, 32);
 
       flags = DRM_TEGRA_GEM_CREATE_BOTTOM_UP;
+
+      /* use linear layout for staging-textures, otherwise tiled */
+      if (template->usage != PIPE_USAGE_STAGING && !(template->bind & PIPE_BIND_SHARED)) {
+         flags |= DRM_TEGRA_GEM_CREATE_TILED;
+         height = align(height, 16);
+         resource->tiled = 1;
+      }
    }
 
    if (template->target != PIPE_BUFFER) {
