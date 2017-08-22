@@ -90,6 +90,18 @@ emit_vec_unop(enum vpe_vec_op op, struct vpe_dst_operand dst,
 }
 
 static struct vpe_vec_instr
+emit_vec_binop(enum vpe_vec_op op, struct vpe_dst_operand dst,
+              struct vpe_src_operand src0, struct vpe_src_operand src1)
+{
+   struct vpe_vec_instr ret = {
+      .op = op,
+      .dst = dst,
+      .src = { src0, src1, src_undef() }
+   };
+   return ret;
+}
+
+static struct vpe_vec_instr
 emit_vMOV(struct vpe_dst_operand dst, struct vpe_src_operand src)
 {
    return emit_vec_unop(VPE_VEC_OP_MOV, dst, src);
@@ -105,6 +117,13 @@ emit_vADD(struct vpe_dst_operand dst, struct vpe_src_operand src0,
       .src = { src0, src_undef(), src2 } // add is "strange" in that it takes src0 and src2
    };
    return ret;
+}
+
+static struct vpe_vec_instr
+emit_vDP4(struct vpe_dst_operand dst, struct vpe_src_operand src0,
+          struct vpe_src_operand src1)
+{
+   return emit_vec_binop(VPE_VEC_OP_DP4, dst, src0, src1);
 }
 
 static struct vpe_scalar_instr
@@ -179,6 +198,12 @@ tgsi_to_vpe(const struct tgsi_full_instruction *inst)
 
    case TGSI_OPCODE_ADD:
       return emit_packed(emit_vADD(tgsi_dst_to_vpe(&inst->Dst[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register)),
+                         emit_sNOP());
+
+   case TGSI_OPCODE_DP4:
+      return emit_packed(emit_vDP4(tgsi_dst_to_vpe(&inst->Dst[0].Register),
                                    tgsi_src_to_vpe(&inst->Src[0].Register),
                                    tgsi_src_to_vpe(&inst->Src[1].Register)),
                          emit_sNOP());
