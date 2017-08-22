@@ -93,7 +93,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
 
    assert(info->count < (1 << 11));
    value  = TGR3D_VAL(DRAW_PRIMITIVES, INDEX_COUNT, info->count);
-   value |= TGR3D_VAL(DRAW_PRIMITIVES, OFFSET, 0); /* TODO: derive from info */
+   value |= TGR3D_VAL(DRAW_PRIMITIVES, OFFSET, info->index_bias);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_DRAW_PRIMITIVES, 1));
    tegra_stream_push(stream, value);
 
