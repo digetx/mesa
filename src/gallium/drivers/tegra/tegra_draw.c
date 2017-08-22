@@ -12,6 +12,36 @@
 #include "tgr_3d.xml.h"
 #include "host1x01_hardware.h"
 
+static int
+tegra_primitive_type(enum pipe_prim_type mode)
+{
+   switch (mode) {
+   case PIPE_PRIM_POINTS:
+      return TGR3D_PRIMITIVE_TYPE_POINTS;
+
+   case PIPE_PRIM_LINES:
+      return TGR3D_PRIMITIVE_TYPE_LINES;
+
+   case PIPE_PRIM_LINE_LOOP:
+      return TGR3D_PRIMITIVE_TYPE_LINE_LOOP;
+
+   case PIPE_PRIM_LINE_STRIP:
+      return TGR3D_PRIMITIVE_TYPE_LINE_STRIP;
+
+   case PIPE_PRIM_TRIANGLES:
+      return TGR3D_PRIMITIVE_TYPE_TRIANGLES;
+
+   case PIPE_PRIM_TRIANGLE_STRIP:
+      return TGR3D_PRIMITIVE_TYPE_TRIANGLE_STRIP;
+
+   case PIPE_PRIM_TRIANGLE_FAN:
+      return TGR3D_PRIMITIVE_TYPE_TRIANGLE_FAN;
+
+   default:
+      unreachable("unexpected enum pipe_prim_type");
+   }
+}
+
 static void
 tegra_draw_vbo(struct pipe_context *pcontext,
                const struct pipe_draw_info *info)
@@ -54,7 +84,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
    assert(info->index_size >= 0 && info->index_size <= 2);
    value  = TGR3D_VAL(DRAW_PARAMS, INDEX_MODE, info->index_size);
    /* TODO: provoking vertex (comes from pipe_rasterizer_state) */
-   value |= TGR3D_VAL(DRAW_PARAMS, PRIMITIVE_TYPE, TGR3D_PRIMITIVE_TYPE_TRIANGLES); /* TODO: derive from info */
+   value |= TGR3D_VAL(DRAW_PARAMS, PRIMITIVE_TYPE, tegra_primitive_type(info->mode));
    value |= TGR3D_VAL(DRAW_PARAMS, FIRST, info->start);
    value |= 0xC0000000; /* flush input caches? */
 
