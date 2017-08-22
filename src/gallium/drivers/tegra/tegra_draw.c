@@ -1,10 +1,12 @@
 #include <stdio.h>
 
 #include "pipe/p_state.h"
+#include "util/u_helpers.h"
 
 #include "tegra_common.h"
 #include "tegra_context.h"
 #include "tegra_draw.h"
+#include "tegra_resource.h"
 #include "tegra_state.h"
 
 #include "tgr_3d.xml.h"
@@ -30,13 +32,27 @@ tegra_draw_vbo(struct pipe_context *pcontext,
 
    tegra_emit_state(context);
 
-   assert(!info->index_size);
-
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_VP_ATTRIB_IN_OUT_SELECT, 1));
    tegra_stream_push(stream, ((uint32_t)context->vs->mask << 16) | out_mask);
 
+   struct pipe_resource *index_buffer = NULL;
+   unsigned index_offset = 0;
+   if (info->index_size > 0) {
+      if (info->has_user_indices) {
+         if (!util_upload_index_buffer(pcontext, info, &index_buffer, &index_offset)) {
+            fprintf(stderr, "util_upload_index_buffer() failed\n");
+            return;
+         }
+      } else
+         index_buffer = info->index.resource;
+
+      tegra_stream_push(stream, host1x_opcode_incr(TGR3D_INDEX_PTR, 1));
+      tegra_stream_push_reloc(stream, tegra_resource(index_buffer)->bo, index_offset);
+   }
+
    /* draw params */
-   value  = TGR3D_VAL(DRAW_PARAMS, INDEX_MODE, TGR3D_INDEX_MODE_NONE);
+   assert(info->index_size >= 0 && info->index_size <= 2);
+   value  = TGR3D_VAL(DRAW_PARAMS, INDEX_MODE, info->index_size);
    /* TODO: provoking vertex (comes from pipe_rasterizer_state) */
    value |= TGR3D_VAL(DRAW_PARAMS, PRIMITIVE_TYPE, TGR3D_PRIMITIVE_TYPE_TRIANGLES); /* TODO: derive from info */
    value |= TGR3D_VAL(DRAW_PARAMS, FIRST, info->start);
