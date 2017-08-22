@@ -86,7 +86,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
    /* TODO: provoking vertex (comes from pipe_rasterizer_state) */
    value |= TGR3D_VAL(DRAW_PARAMS, PRIMITIVE_TYPE, tegra_primitive_type(info->mode));
    value |= TGR3D_VAL(DRAW_PARAMS, FIRST, info->start);
-   value |= 0xC0000000;
+   value |= 0xC0000000; /* flush input caches? */
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_DRAW_PARAMS, 1));
    tegra_stream_push(stream, value);
