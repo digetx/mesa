@@ -97,10 +97,8 @@ struct vpe_vec_instr {
 
 struct vpe_scalar_instr {
    enum vpe_scalar_op op;
-/*
    struct vpe_dst_operand dst;
    struct vpe_src_operand src;
-*/
 };
 
 struct vpe_instr {

@@ -62,6 +62,18 @@ src_temp(int index, const enum vpe_swz swizzle[4], bool negate, bool absolute)
 }
 
 static struct vpe_dst_operand
+dst_undef()
+{
+   struct vpe_dst_operand ret = {
+      .file = VPE_DST_FILE_UNDEF,
+      .index = 0,
+      .write_mask = 0,
+      .saturate = 0
+   };
+   return ret;
+}
+
+static struct vpe_dst_operand
 output(int index, unsigned int write_mask, bool saturate)
 {
    struct vpe_dst_operand ret = {
@@ -110,6 +122,17 @@ emit_vec_binop(enum vpe_vec_op op, struct vpe_dst_operand dst,
 }
 
 static struct vpe_vec_instr
+emit_vNOP()
+{
+   struct vpe_vec_instr ret = {
+      .op = VPE_VEC_OP_NOP,
+      .dst = dst_undef(),
+      .src = { src_undef(), src_undef(), src_undef() }
+   };
+   return ret;
+}
+
+static struct vpe_vec_instr
 emit_vMOV(struct vpe_dst_operand dst, struct vpe_src_operand src)
 {
    return emit_vec_unop(VPE_VEC_OP_MOV, dst, src);
@@ -127,22 +150,55 @@ emit_vADD(struct vpe_dst_operand dst, struct vpe_src_operand src0,
    return ret;
 }
 
+#define GEN_V_BINOP(OP) \
+static struct vpe_vec_instr \
+emit_v ## OP (struct vpe_dst_operand dst, struct vpe_src_operand src0, \
+          struct vpe_src_operand src1) \
+{ \
+   return emit_vec_binop(VPE_VEC_OP_ ## OP, dst, src0, src1); \
+}
+
+GEN_V_BINOP(MUL)
+GEN_V_BINOP(DP3)
+GEN_V_BINOP(DP4)
+GEN_V_BINOP(SLT)
+GEN_V_BINOP(MAX)
+
 static struct vpe_vec_instr
-emit_vDP4(struct vpe_dst_operand dst, struct vpe_src_operand src0,
-          struct vpe_src_operand src1)
+emit_vMAD(struct vpe_dst_operand dst, struct vpe_src_operand src0,
+          struct vpe_src_operand src1, struct vpe_src_operand src2)
 {
-   return emit_vec_binop(VPE_VEC_OP_DP4, dst, src0, src1);
+   struct vpe_vec_instr ret = {
+      .op = VPE_VEC_OP_MAD,
+      .dst = dst,
+      .src = { src0, src1, src2 }
+   };
+   return ret;
 }
 
 static struct vpe_scalar_instr
 emit_sNOP()
 {
    struct vpe_scalar_instr ret = {
-      .op = VPE_SCALAR_OP_NOP
-      /* TODO: fill in more */
+      .op = VPE_SCALAR_OP_NOP,
+      .dst = dst_undef(),
+      .src = src_undef()
    };
    return ret;
 }
+
+#define GEN_S_UNOP(OP) \
+static struct vpe_scalar_instr \
+emit_s ## OP (struct vpe_dst_operand dst, struct vpe_src_operand src) \
+{ \
+   struct vpe_scalar_instr ret = { \
+      .op = VPE_SCALAR_OP_ ## OP, \
+      .src = src \
+   }; \
+   return ret; \
+}
+
+GEN_S_UNOP(RSQ)
 
 static struct vpe_instr
 emit_packed(struct vpe_vec_instr vec, struct vpe_scalar_instr scalar)
@@ -191,8 +247,13 @@ tgsi_src_to_vpe(const struct tgsi_src_register *src)
    case TGSI_FILE_TEMPORARY:
       return src_temp(src->Index, swizzle, negate, absolute);
 
+   case TGSI_FILE_IMMEDIATE:
+      /* HACK: allocate uniforms from the top for immediates; need to actually record these */
+      return uniform(1023 - src->Index, swizzle, negate, absolute);
+
    default:
-      unreachable("unsupported output");
+      fprintf(stderr, "unsupported input: %d\n", src->File);
+      unreachable("unsupported input!");
    }
 }
 
@@ -213,11 +274,47 @@ tgsi_to_vpe(const struct tgsi_full_instruction *inst)
                                    tgsi_src_to_vpe(&inst->Src[1].Register)),
                          emit_sNOP());
 
+   case TGSI_OPCODE_MUL:
+      return emit_packed(emit_vMUL(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register)),
+                         emit_sNOP());
+
+   case TGSI_OPCODE_DP3:
+      return emit_packed(emit_vDP3(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register)),
+                         emit_sNOP());
+
    case TGSI_OPCODE_DP4:
       return emit_packed(emit_vDP4(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
                                    tgsi_src_to_vpe(&inst->Src[0].Register),
                                    tgsi_src_to_vpe(&inst->Src[1].Register)),
                          emit_sNOP());
+
+   case TGSI_OPCODE_SLT:
+      return emit_packed(emit_vSLT(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register)),
+                         emit_sNOP());
+
+   case TGSI_OPCODE_MAX:
+      return emit_packed(emit_vMAX(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register)),
+                         emit_sNOP());
+
+   case TGSI_OPCODE_MAD:
+      return emit_packed(emit_vMAD(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register),
+                                   tgsi_src_to_vpe(&inst->Src[1].Register),
+                                   tgsi_src_to_vpe(&inst->Src[2].Register)),
+                         emit_sNOP());
+
+   case TGSI_OPCODE_RSQ:
+      return emit_packed(emit_vNOP(),
+		         emit_sRSQ(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                                   tgsi_src_to_vpe(&inst->Src[0].Register)));
 
    default:
       unreachable("unsupported TGSI-opcode!");
