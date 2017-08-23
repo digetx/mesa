@@ -79,6 +79,7 @@ struct vpe_dst_operand {
    enum vpe_dst_file file;
    int index;
    unsigned int write_mask;
+   bool saturate;
 };
 
 struct vpe_src_operand {

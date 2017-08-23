@@ -56,23 +56,25 @@ src_temp(int index, const enum vpe_swz swizzle[4])
 }
 
 static struct vpe_dst_operand
-output(int index, unsigned int write_mask)
+output(int index, unsigned int write_mask, bool saturate)
 {
    struct vpe_dst_operand ret = {
       .file = VPE_DST_FILE_OUTPUT,
       .index = index ? 7 : 0, // HACK: do proper mapping later!
-      .write_mask = write_mask
+      .write_mask = write_mask,
+      .saturate = saturate
    };
    return ret;
 }
 
 static struct vpe_dst_operand
-dst_temp(int index, unsigned int write_mask)
+dst_temp(int index, unsigned int write_mask, bool saturate)
 {
    struct vpe_dst_operand ret = {
       .file = VPE_DST_FILE_TEMP,
       .index = index,
-      .write_mask = write_mask
+      .write_mask = write_mask,
+      .saturate = saturate
    };
    return ret;
 }
@@ -147,14 +149,14 @@ emit_packed(struct vpe_vec_instr vec, struct vpe_scalar_instr scalar)
 }
 
 static struct vpe_dst_operand
-tgsi_dst_to_vpe(const struct tgsi_dst_register *dst)
+tgsi_dst_to_vpe(const struct tgsi_dst_register *dst, bool saturate)
 {
    switch (dst->File) {
    case TGSI_FILE_OUTPUT:
-      return output(dst->Index, dst->WriteMask);
+      return output(dst->Index, dst->WriteMask, saturate);
 
    case TGSI_FILE_TEMPORARY:
-      return dst_temp(dst->Index, dst->WriteMask);
+      return dst_temp(dst->Index, dst->WriteMask, saturate);
 
    default:
       unreachable("unsupported output");
@@ -190,20 +192,21 @@ tgsi_src_to_vpe(const struct tgsi_src_register *src)
 static struct vpe_instr
 tgsi_to_vpe(const struct tgsi_full_instruction *inst)
 {
+   bool saturate = inst->Instruction.Saturate != 0;
    switch (inst->Instruction.Opcode) {
    case TGSI_OPCODE_MOV:
-      return emit_packed(emit_vMOV(tgsi_dst_to_vpe(&inst->Dst[0].Register),
+      return emit_packed(emit_vMOV(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
                                    tgsi_src_to_vpe(&inst->Src[0].Register)),
                          emit_sNOP());
 
    case TGSI_OPCODE_ADD:
-      return emit_packed(emit_vADD(tgsi_dst_to_vpe(&inst->Dst[0].Register),
+      return emit_packed(emit_vADD(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
                                    tgsi_src_to_vpe(&inst->Src[0].Register),
                                    tgsi_src_to_vpe(&inst->Src[1].Register)),
                          emit_sNOP());
 
    case TGSI_OPCODE_DP4:
-      return emit_packed(emit_vDP4(tgsi_dst_to_vpe(&inst->Dst[0].Register),
+      return emit_packed(emit_vDP4(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
                                    tgsi_src_to_vpe(&inst->Src[0].Register),
                                    tgsi_src_to_vpe(&inst->Src[1].Register)),
                          emit_sNOP());
