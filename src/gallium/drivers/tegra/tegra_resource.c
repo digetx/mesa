@@ -299,8 +299,6 @@ tegra_blit(struct pipe_context *pcontext, const struct pipe_blit_info *info)
       return;
    }
 
-   tegra_stream_push_setclass(&gr2d->stream, HOST1X_CLASS_GR2D);
-
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x009, 0x9));
    tegra_stream_push(&gr2d->stream, 0x0000003a);            /* 0x009 - trigger */
    tegra_stream_push(&gr2d->stream, 0x00000000);            /* 0x00c - cmdsel */
@@ -385,8 +383,6 @@ tegra_fill(struct tegra_channel *gr2d,
       fprintf(stderr, "tegra_stream_begin() failed: %d\n", err);
       return -1;
    }
-
-   tegra_stream_push_setclass(&gr2d->stream, HOST1X_CLASS_GR2D);
 
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x09, 0x09));
    tegra_stream_push(&gr2d->stream, 0x0000003a);           /* 0x009 - trigger */

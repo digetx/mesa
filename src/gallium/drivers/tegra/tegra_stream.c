@@ -182,7 +182,6 @@ int tegra_stream_begin(struct tegra_stream *stream)
         return -1;
     }
 
-    stream->class_id = 0;
     stream->status = TEGRADRM_STREAM_CONSTRUCT;
 
     return 0;
@@ -241,28 +240,6 @@ int tegra_stream_push(struct tegra_stream *stream, uint32_t word)
     *stream->buffer.pushbuf->ptr++ = word;
 
     return 0;
-}
-
-/*
- * tegra_stream_push_setclass(stream, class_id)
- *
- * Push "set class" opcode to the stream. Do nothing if the class is already
- * active
- */
-
-int tegra_stream_push_setclass(struct tegra_stream *stream, unsigned class_id)
-{
-    int result;
-
-    if (stream->class_id == class_id)
-        return 0;
-
-    result = tegra_stream_push(stream, host1x_opcode_setclass(class_id, 0, 0));
-
-    if (result == 0)
-        stream->class_id = class_id;
-
-    return result;
 }
 
 /*
@@ -333,13 +310,6 @@ int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
     if (ret != 0) {
         stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
         ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
-        return -1;
-    }
-
-    /* Class id should be set explicitly, for simplicity. */
-    if (stream->class_id == 0) {
-        stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
-        ErrorMsg("HOST1X class not specified\n");
         return -1;
     }
 

@@ -12,7 +12,6 @@ AM_CFLAGS = \
 	$(LIBDRM_CFLAGS)
 
 libtegra_la_SOURCES = \
-	class_ids.h \
 	host1x01_hardware.h \
 	hw_host1x01_uclass.h \
 	tegra_context.c \

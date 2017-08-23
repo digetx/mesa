@@ -28,8 +28,6 @@ static int init(struct tegra_stream *stream)
       return err;
    }
 
-   tegra_stream_push_setclass(stream, HOST1X_CLASS_GR3D);
-
    /* Tegra30 specific stuff */
    tegra_stream_push(stream, host1x_opcode_incr(0x750, 16));
    for (int i = 0; i < 16; i++)
@@ -217,7 +215,7 @@ static int init(struct tegra_stream *stream)
 
 static int
 tegra_channel_create(struct tegra_context *context,
-                     enum drm_tegra_class class,
+                     enum drm_tegra_client class,
                      struct tegra_channel **channelp)
 {
    struct tegra_screen *screen = tegra_screen(context->base.screen);
@@ -307,13 +305,15 @@ tegra_screen_context_create(struct pipe_screen *pscreen,
    context->primconvert = util_primconvert_create(&context->base,
                                                   (1 << PIPE_PRIM_QUADS) - 1);
 
-   err = tegra_channel_create(context, DRM_TEGRA_GR2D, &context->gr2d);
+   err = tegra_channel_create(context, DRM_TEGRA_CLIENT_GR2D_G2,
+                              &context->gr2d);
    if (err < 0) {
       fprintf(stderr, "tegra_channel_create() failed: %d\n", err);
       return NULL;
    }
 
-   err = tegra_channel_create(context, DRM_TEGRA_GR3D, &context->gr3d);
+   err = tegra_channel_create(context, DRM_TEGRA_CLIENT_GR3D,
+                              &context->gr3d);
    if (err < 0) {
       fprintf(stderr, "tegra_channel_create() failed: %d\n", err);
       return NULL;
