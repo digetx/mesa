@@ -86,6 +86,7 @@ struct vpe_src_operand {
    enum vpe_src_file file;
    int index;
    enum vpe_swz swizzle[4];
+   bool negate, absolute;
 };
 
 struct vpe_vec_instr {

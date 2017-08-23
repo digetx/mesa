@@ -23,33 +23,39 @@ src_undef()
 }
 
 static struct vpe_src_operand
-attrib(int index, const enum vpe_swz swizzle[4])
+attrib(int index, const enum vpe_swz swizzle[4], bool negate, bool absolute)
 {
    struct vpe_src_operand ret = {
       .file = VPE_SRC_FILE_ATTRIB,
-      .index = index
+      .index = index,
+      .negate = negate,
+      .absolute = absolute
    };
    memcpy(ret.swizzle, swizzle, sizeof(ret.swizzle));
    return ret;
 }
 
 static struct vpe_src_operand
-uniform(int index, const enum vpe_swz swizzle[4])
+uniform(int index, const enum vpe_swz swizzle[4], bool negate, bool absolute)
 {
    struct vpe_src_operand ret = {
       .file = VPE_SRC_FILE_UNIFORM,
-      .index = index
+      .index = index,
+      .negate = negate,
+      .absolute = absolute
    };
    memcpy(ret.swizzle, swizzle, sizeof(ret.swizzle));
    return ret;
 }
 
 static struct vpe_src_operand
-src_temp(int index, const enum vpe_swz swizzle[4])
+src_temp(int index, const enum vpe_swz swizzle[4], bool negate, bool absolute)
 {
    struct vpe_src_operand ret = {
       .file = VPE_SRC_FILE_TEMP,
-      .index = index
+      .index = index,
+      .negate = negate,
+      .absolute = absolute
    };
    memcpy(ret.swizzle, swizzle, sizeof(ret.swizzle));
    return ret;
@@ -172,16 +178,18 @@ tgsi_src_to_vpe(const struct tgsi_src_register *src)
       src->SwizzleZ,
       src->SwizzleW
    };
+   bool negate = src->Negate != 0;
+   bool absolute = src->Absolute != 0;
 
    switch (src->File) {
    case TGSI_FILE_INPUT:
-      return attrib(src->Index, swizzle);
+      return attrib(src->Index, swizzle, negate, absolute);
 
    case TGSI_FILE_CONSTANT:
-      return uniform(src->Index, swizzle);
+      return uniform(src->Index, swizzle, negate, absolute);
 
    case TGSI_FILE_TEMPORARY:
-      return src_temp(src->Index, swizzle);
+      return src_temp(src->Index, swizzle, negate, absolute);
 
    default:
       unreachable("unsupported output");

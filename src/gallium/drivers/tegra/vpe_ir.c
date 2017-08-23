@@ -87,6 +87,8 @@ tegra_vpe_pack(uint32_t *dst, struct vpe_instr instr, bool end_of_program)
    tmp.rA_swizzle_y = instr.vec.src[0].swizzle[1];
    tmp.rA_swizzle_z = instr.vec.src[0].swizzle[2];
    tmp.rA_swizzle_w = instr.vec.src[0].swizzle[3];
+   tmp.rA_negate = instr.vec.src[0].negate;
+   tmp.rA_absolute = instr.vec.src[0].absolute;
 
    tmp.rB_type = instr.vec.src[1].file;
    tmp.rB_index = instr.vec.src[1].index;
@@ -94,6 +96,8 @@ tegra_vpe_pack(uint32_t *dst, struct vpe_instr instr, bool end_of_program)
    tmp.rB_swizzle_y = instr.vec.src[1].swizzle[1];
    tmp.rB_swizzle_z = instr.vec.src[1].swizzle[2];
    tmp.rB_swizzle_w = instr.vec.src[1].swizzle[3];
+   tmp.rB_negate = instr.vec.src[1].negate;
+   tmp.rB_absolute = instr.vec.src[1].absolute;
 
    tmp.rC_type = instr.vec.src[2].file;
    tmp.rC_index = instr.vec.src[2].index;
@@ -101,6 +105,8 @@ tegra_vpe_pack(uint32_t *dst, struct vpe_instr instr, bool end_of_program)
    tmp.rC_swizzle_y = instr.vec.src[2].swizzle[1];
    tmp.rC_swizzle_z = instr.vec.src[2].swizzle[2];
    tmp.rC_swizzle_w = instr.vec.src[2].swizzle[3];
+   tmp.rC_negate = instr.vec.src[2].negate;
+   tmp.rC_absolute = instr.vec.src[2].absolute;
 
    tmp.end_of_program = end_of_program;
 

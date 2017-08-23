@@ -53,9 +53,9 @@ union vpe_instruction_u {
 		unsigned condition_check:1;			// 109
 		unsigned condition_set:1;			// 110
 		unsigned vector_rD_index:6;			// 111 .. 116
-		unsigned rA_absolute_value:1;			// 117
-		unsigned rB_absolute_value:1;			// 118
-		unsigned rC_absolute_value:1;			// 119
+		unsigned rA_absolute:1;				// 117
+		unsigned rB_absolute:1;				// 118
+		unsigned rC_absolute:1;				// 119
 		unsigned bit120:1;				// 120
 		unsigned condition_register_index:1;		// 121
 		unsigned saturate_result:1;			// 122
