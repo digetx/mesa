@@ -78,7 +78,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
    tegra_stream_push(stream, ((uint32_t)context->vs->mask << 16) | out_mask);
 
    struct pipe_resource *index_buffer = NULL;
-   unsigned index_offset = 0;
+   unsigned index_offset = info->start * info->index_size;
    if (info->index_size > 0) {
       if (info->has_user_indices) {
          if (!util_upload_index_buffer(pcontext, info, &index_buffer, &index_offset)) {
