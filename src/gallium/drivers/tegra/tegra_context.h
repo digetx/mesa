@@ -39,6 +39,8 @@ struct tegra_context {
    struct tegra_vertexbuf_state vbs;
    struct pipe_constant_buffer constant_buffer[PIPE_SHADER_TYPES];
 
+   struct tegra_zsa_state *zsa;
+
    struct tegra_vs_state *vshader;
    struct tegra_fs_state *fshader;
 
