@@ -20,6 +20,8 @@ struct tegra_rasterizer_state {
 
 struct tegra_zsa_state {
    struct pipe_depth_stencil_alpha_state base;
+   uint32_t depth_min, depth_max;
+   uint32_t depth_test;
 };
 
 struct tegra_vertexbuf_state {

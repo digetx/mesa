@@ -188,13 +188,13 @@ tegra_screen_resource_create(struct pipe_screen *pscreen,
    resource->base.b.screen = pscreen;
 
    resource->pitch = template->width0 * util_format_get_blocksize(template->format);
+   /* TODO: use alignment specific to a surface type */
+   resource->pitch = align(resource->pitch, 256);
    height = template->height0;
 
    resource->tiled = 0;
-   if (template->bind & (PIPE_BIND_RENDER_TARGET | PIPE_BIND_SAMPLER_VIEW | PIPE_BIND_SCANOUT)) {
-      resource->pitch = template->width0 * util_format_get_blocksize(template->format);
-      resource->pitch = align(resource->pitch, 32);
-
+   if (template->bind & (PIPE_BIND_RENDER_TARGET | PIPE_BIND_SAMPLER_VIEW |
+                         PIPE_BIND_SCANOUT | PIPE_BIND_DEPTH_STENCIL)) {
       flags = DRM_TEGRA_GEM_CREATE_BOTTOM_UP;
 
       /* use linear layout for staging-textures, otherwise tiled */
@@ -461,7 +461,7 @@ tegra_clear(struct pipe_context *pcontext, unsigned int buffers,
    if (buffers & PIPE_CLEAR_DEPTH || buffers & PIPE_CLEAR_STENCIL) {
       /* TODO: handle the case where both are not set! */
       if (tegra_fill(context->gr2d, tegra_resource(fb->zsbuf->texture),
-                     util_pack_z_stencil(depth, stencil, fb->zsbuf->format),
+                     util_pack_z_stencil(fb->zsbuf->format, depth, stencil),
                      util_format_get_blocksize(fb->zsbuf->format),
                      0, 0, fb->zsbuf->width, fb->zsbuf->height) < 0)
          return;
