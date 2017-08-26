@@ -428,13 +428,13 @@ tegra_create_fs_state(struct pipe_context *pcontext,
 
    static uint32_t alu_insts[] = {
       0x0001c0c0,
-      0x3f41f200,
-      0x0001a080,
-      0x3f41f200,
+      0x3f41f231,
+      0x0001a040,
+      0x3f41f231,
       0x00014000,
-      0x3f41f200,
-      0x00012040,
-      0x3f41f200
+      0x3f41f231,
+      0x00012080,
+      0x3f41f231
    };
    so->alu_insts = alu_insts;
    so->num_alu_insts = ARRAY_SIZE(alu_insts);
