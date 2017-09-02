@@ -193,6 +193,7 @@ emit_s ## OP (struct vpe_dst_operand dst, struct vpe_src_operand src) \
 { \
    struct vpe_scalar_instr ret = { \
       .op = VPE_SCALAR_OP_ ## OP, \
+      .dst = dst, \
       .src = src \
    }; \
    return ret; \
