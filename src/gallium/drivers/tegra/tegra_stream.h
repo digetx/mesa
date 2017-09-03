@@ -46,12 +46,6 @@ struct tegra_stream {
    struct drm_tegra_pushbuf *pushbuf;
 };
 
-struct tegra_reloc {
-   struct drm_tegra_bo *bo;
-   unsigned var_offset;
-   unsigned bo_offset;
-};
-
 /* Stream operations */
 int
 tegra_stream_create(struct drm_tegra *drm,
@@ -77,11 +71,8 @@ int
 tegra_stream_push_reloc(struct tegra_stream *stream,
                         struct drm_tegra_bo *bo, unsigned offset);
 
-struct tegra_reloc
-tegra_reloc(struct drm_tegra_bo *bo, unsigned bo_offset, unsigned var_offset);
-
 int
-tegra_stream_push_words(struct tegra_stream *stream, const void *ptr,
-                        unsigned words, unsigned num_relocs, ...);
+tegra_stream_push_words(struct tegra_stream *stream,
+                        const uint32_t *words, unsigned words_num);
 
 #endif

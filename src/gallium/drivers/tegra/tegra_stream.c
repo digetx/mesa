@@ -251,70 +251,19 @@ tegra_stream_end(struct tegra_stream *stream)
 }
 
 /*
- * tegra_reloc (bo, bo_offset, var_offset)
+ * tegra_stream_push_words(stream, words, words_num)
  *
- * This function creates a reloc allocation. The function should be used in
- * conjunction with tegra_stream_push_words.
+ * Just a nice helper to push multiple words.
  */
 
-struct tegra_reloc
-tegra_reloc(struct drm_tegra_bo *bo, unsigned bo_offset, unsigned var_offset)
+int
+tegra_stream_push_words(struct tegra_stream *stream,
+                        const uint32_t *words, unsigned words_num)
 {
-   struct tegra_reloc reloc = {bo, var_offset, bo_offset};
-   return reloc;
-}
+   int ret = 0;
 
-/*
- * tegra_stream_push_words(stream, addr, words, ...)
- *
- * Push words from given address to stream. The function takes
- * reloc structs as its argument. You can generate the structs with tegra_reloc
- * function.
- */
+   for (int i = 0; i < words_num && ret == 0; i++)
+      ret = tegra_stream_push(stream, words[i]);
 
-int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
-                            unsigned words, unsigned num_relocs, ...)
-{
-   struct tegra_reloc reloc_arg;
-   uint32_t *pushbuf_ptr;
-   va_list ap;
-   int ret;
-
-   if (!(stream && stream->status == TEGRADRM_STREAM_CONSTRUCT)) {
-      ErrorMsg("Stream status isn't CONSTRUCT\n");
-      return -1;
-   }
-
-   ret = drm_tegra_pushbuf_prepare(stream->pushbuf, words);
-   if (ret != 0) {
-      stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
-      ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
-      return -1;
-   }
-
-   /* Copy the contents */
-   pushbuf_ptr = stream->pushbuf->ptr;
-   memcpy(pushbuf_ptr, addr, words * sizeof(uint32_t));
-
-   /* Copy relocs */
-   va_start(ap, num_relocs);
-   while (num_relocs--) {
-      reloc_arg = va_arg(ap, struct tegra_reloc);
-
-      stream->pushbuf->ptr  = pushbuf_ptr;
-      stream->pushbuf->ptr += reloc_arg.var_offset / sizeof(uint32_t);
-
-      ret = drm_tegra_pushbuf_relocate(stream->pushbuf,
-                                       reloc_arg.bo, reloc_arg.bo_offset, 0);
-      if (ret != 0) {
-         stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
-         ErrorMsg("drm_tegra_pushbuf_relocate() failed %d\n", ret);
-         break;
-      }
-   }
-   va_end(ap);
-
-   stream->pushbuf->ptr = pushbuf_ptr + words;
-
-   return ret ? -1 : 0;
+   return ret;
 }

@@ -491,7 +491,7 @@ emit_scissor(struct tegra_context *context)
    struct tegra_stream *stream = &context->gr3d->stream;
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_SCISSOR_HORIZ, 2));
-   tegra_stream_push_words(stream, context->no_scissor, 2, 0);
+   tegra_stream_push_words(stream, context->no_scissor, 2);
 }
 
 static void
@@ -500,7 +500,7 @@ emit_viewport(struct tegra_context *context)
    struct tegra_stream *stream = &context->gr3d->stream;
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_VIEWPORT_X_BIAS, 6));
-   tegra_stream_push_words(stream, context->viewport, 6, 0);
+   tegra_stream_push_words(stream, context->viewport, 6);
 }
 
 static void
@@ -509,7 +509,7 @@ emit_guardband(struct tegra_context *context)
    struct tegra_stream *stream = &context->gr3d->stream;
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_GUARDBAND_WIDTH, 3));
-   tegra_stream_push_words(stream, context->guardband, 3, 0);
+   tegra_stream_push_words(stream, context->guardband, 3);
 }
 
 static void
@@ -548,7 +548,7 @@ emit_vs_uniforms(struct tegra_context *context)
 
       tegra_stream_push(stream, host1x_opcode_imm(TGR3D_VP_UPLOAD_CONST_ID, 0));
       tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_VP_UPLOAD_CONST, len));
-      tegra_stream_push_words(stream, constbuf->user_buffer, len, 0);
+      tegra_stream_push_words(stream, constbuf->user_buffer, len);
    }
 }
 
@@ -570,31 +570,31 @@ emit_fragment_shader(struct tegra_stream *stream, struct tegra_fs_state *fshader
    tegra_stream_push(stream, 0x00000040);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_PSEQ_UPLOAD_INST, fshader->num_pseq_insts));
-   tegra_stream_push_words(stream, fshader->pseq_insts, fshader->num_pseq_insts, 0);
+   tegra_stream_push_words(stream, fshader->pseq_insts, fshader->num_pseq_insts);
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_FP_PSEQ_UPLOAD_INST_BUFFER_FLUSH, 1));
    tegra_stream_push(stream, 0x00000000);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_MFU_SCHED, fshader->num_mfu_scheds));
-   tegra_stream_push_words(stream, fshader->mfu_scheds, fshader->num_mfu_scheds, 0);
+   tegra_stream_push_words(stream, fshader->mfu_scheds, fshader->num_mfu_scheds);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_MFU_INST, fshader->num_mfu_insts));
-   tegra_stream_push_words(stream, fshader->mfu_insts, fshader->num_mfu_insts, 0);
+   tegra_stream_push_words(stream, fshader->mfu_insts, fshader->num_mfu_insts);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_TEX_INST, fshader->num_tex_insts));
-   tegra_stream_push_words(stream, fshader->tex_insts, fshader->num_tex_insts, 0);
+   tegra_stream_push_words(stream, fshader->tex_insts, fshader->num_tex_insts);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_ALU_SCHED, fshader->num_alu_scheds));
-   tegra_stream_push_words(stream, fshader->alu_scheds, fshader->num_alu_scheds, 0);
+   tegra_stream_push_words(stream, fshader->alu_scheds, fshader->num_alu_scheds);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_ALU_INST, fshader->num_alu_insts));
-   tegra_stream_push_words(stream, fshader->alu_insts, fshader->num_alu_insts, 0);
+   tegra_stream_push_words(stream, fshader->alu_insts, fshader->num_alu_insts);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_ALU_INST_COMPLEMENT, 1));
    tegra_stream_push(stream, 0x00000000);
 
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_FP_UPLOAD_DW_INST, fshader->num_dw_insts));
-   tegra_stream_push_words(stream, fshader->dw_insts, fshader->num_dw_insts, 0);
+   tegra_stream_push_words(stream, fshader->dw_insts, fshader->num_dw_insts);
 
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_TRAM_SETUP, 0x0140));
 }
@@ -605,7 +605,7 @@ emit_vertex_shader(struct tegra_stream *stream, struct tegra_vs_state *vshader)
    /* upload vertex program */
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_VP_UPLOAD_INST_ID, 0));
    tegra_stream_push(stream, host1x_opcode_nonincr(TGR3D_VP_UPLOAD_INST, vshader->num_vp_insts));
-   tegra_stream_push_words(stream, vshader->vp_insts, vshader->num_vp_insts, 0);
+   tegra_stream_push_words(stream, vshader->vp_insts, vshader->num_vp_insts);
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_VP_ATTRIB_IN_OUT_SELECT, 1));
    int input_mask = (1 << 0) | (1 << 1);
@@ -631,7 +631,7 @@ emit_program(struct tegra_context *context)
       0x0000fecd
    };
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_LINKER_INSTRUCTION(0), ARRAY_SIZE(linker_insts)));
-   tegra_stream_push_words(stream, linker_insts, ARRAY_SIZE(linker_insts), 0);
+   tegra_stream_push_words(stream, linker_insts, ARRAY_SIZE(linker_insts));
 }
 
 void
