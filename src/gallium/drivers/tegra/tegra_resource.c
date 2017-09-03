@@ -99,8 +99,8 @@ tegra_resource_transfer_map(struct pipe_context *pcontext,
    *transfer = ptrans;
 
    return (uint8_t *)ret +
-	   box->y * resource->pitch +
-	   box->x * util_format_get_blocksize(presource->format);
+           box->y * resource->pitch +
+           box->x * util_format_get_blocksize(presource->format);
 }
 
 static void
@@ -360,9 +360,9 @@ tegra_blit(struct pipe_context *pcontext, const struct pipe_blit_info *info)
 static uint32_t
 pack_color(enum pipe_format format, const float *rgba)
 {
-	union util_color uc;
-	util_pack_color(rgba, format, &uc);
-	return uc.ui[0];
+   union util_color uc;
+   util_pack_color(rgba, format, &uc);
+   return uc.ui[0];
 }
 
 static int

@@ -314,7 +314,7 @@ tgsi_to_vpe(const struct tgsi_full_instruction *inst)
 
    case TGSI_OPCODE_RSQ:
       return emit_packed(emit_vNOP(),
-		         emit_sRSQ(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
+                         emit_sRSQ(tgsi_dst_to_vpe(&inst->Dst[0].Register, saturate),
                                    tgsi_src_to_vpe(&inst->Src[0].Register)));
 
    default:
