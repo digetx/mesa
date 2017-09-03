@@ -70,8 +70,6 @@ tegra_draw_vbo(struct pipe_context *pcontext,
       return;
    }
 
-   tegra_stream_push_setclass(stream, HOST1X_CLASS_GR3D);
-
    tegra_emit_state(context);
 
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_VP_ATTRIB_IN_OUT_SELECT, 1));

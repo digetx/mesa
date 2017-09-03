@@ -28,8 +28,6 @@ static int init(struct tegra_stream *stream)
       return err;
    }
 
-   tegra_stream_push_setclass(stream, HOST1X_CLASS_GR3D);
-
    /* Tegra30 specific stuff */
    tegra_stream_push(stream, host1x_opcode_incr(0x750, 16));
    for (int i = 0; i < 16; i++)

@@ -31,8 +31,6 @@
 #include <stdint.h>
 #include <libdrm/tegra.h>
 
-#include "class_ids.h"
-
 enum tegra_stream_status {
    TEGRADRM_STREAM_FREE,
    TEGRADRM_STREAM_CONSTRUCT,
@@ -52,7 +50,6 @@ struct tegra_stream {
 
    struct tegra_command_buffer buffer;
    int num_words;
-   uint32_t class_id;
 };
 
 struct tegra_reloc {
@@ -82,10 +79,6 @@ tegra_stream_flush(struct tegra_stream *stream);
 
 int
 tegra_stream_push(struct tegra_stream *stream, uint32_t word);
-
-int
-tegra_stream_push_setclass(struct tegra_stream *stream,
-                           enum host1x_class class_id);
 
 int
 tegra_stream_push_reloc(struct tegra_stream *stream,
