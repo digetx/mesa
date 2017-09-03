@@ -494,7 +494,7 @@ tegra_clear_depth_stencil(struct pipe_context *pipe,
 {
    assert(!render_condition_enabled);
    tegra_fill(tegra_context(pipe)->gr2d, tegra_resource(dst->texture),
-              util_pack_z_stencil(depth, stencil, dst->format),
+              util_pack_z_stencil(dst->format, depth, stencil),
               util_format_get_blocksize(dst->format),
               dstx, dsty, width, height);
 }
