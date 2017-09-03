@@ -75,6 +75,7 @@ tegra_vpe_pack(uint32_t *dst, struct vpe_instr instr, bool end_of_program)
    switch (instr.vec.dst.file) {
    case VPE_DST_FILE_TEMP:
       tmp.vector_rD_index = instr.vec.dst.index;
+      tmp.export_write_index = 31;
       break;
 
    case VPE_DST_FILE_OUTPUT:
@@ -99,6 +100,7 @@ tegra_vpe_pack(uint32_t *dst, struct vpe_instr instr, bool end_of_program)
    switch (instr.scalar.dst.file) {
    case VPE_DST_FILE_TEMP:
       tmp.scalar_rD_index = instr.scalar.dst.index;
+      tmp.export_write_index = 31;
       break;
 
    case VPE_DST_FILE_OUTPUT:
