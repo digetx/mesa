@@ -38,25 +38,18 @@ enum tegra_stream_status {
    TEGRADRM_STREAM_READY,
 };
 
-struct tegra_command_buffer {
-   struct drm_tegra_pushbuf *pushbuf;
-};
-
 struct tegra_stream {
    enum tegra_stream_status status;
 
    struct drm_tegra_job *job;
    struct drm_tegra_channel *channel;
-
-   struct tegra_command_buffer buffer;
-   int num_words;
+   struct drm_tegra_pushbuf *pushbuf;
 };
 
 struct tegra_reloc {
-   const void *addr;
    struct drm_tegra_bo *bo;
-   uint32_t offset;
    unsigned var_offset;
+   unsigned bo_offset;
 };
 
 /* Stream operations */
@@ -85,11 +78,10 @@ tegra_stream_push_reloc(struct tegra_stream *stream,
                         struct drm_tegra_bo *bo, unsigned offset);
 
 struct tegra_reloc
-tegra_reloc(const void *var_ptr, struct drm_tegra_bo *bo,
-            uint32_t offset, uint32_t var_offset);
+tegra_reloc(struct drm_tegra_bo *bo, unsigned bo_offset, unsigned var_offset);
 
 int
-tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
-                        unsigned words, int num_relocs, ...);
+tegra_stream_push_words(struct tegra_stream *stream, const void *ptr,
+                        unsigned words, unsigned num_relocs, ...);
 
 #endif

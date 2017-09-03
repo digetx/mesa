@@ -50,10 +50,6 @@
 /*
  * tegra_stream_create(channel)
  *
- * Create a stream for given channel. This function preallocates several
- * command buffers for later usage to improve performance. Streams are
- * used for generating command buffers opcode by opcode using
- * tegra_stream_push().
  */
 
 int
@@ -64,7 +60,6 @@ tegra_stream_create(struct drm_tegra *drm,
 {
    stream->status    = TEGRADRM_STREAM_FREE;
    stream->channel   = channel;
-   stream->num_words = words_num;
 
    return 0;
 }
@@ -72,7 +67,7 @@ tegra_stream_create(struct drm_tegra *drm,
 /*
  * tegra_stream_destroy(stream)
  *
- * Destroy the given stream object. All resrouces are released.
+ * Destroy resources of the given stream object.
  */
 
 void
@@ -85,12 +80,10 @@ tegra_stream_destroy(struct tegra_stream *stream)
 }
 
 /*
- * tegra_stream_flush(stream, fence)
+ * tegra_stream_flush(stream)
  *
- * Send the current contents of stream buffer. The stream must be
- * synchronized correctly (we cannot send partial streams). If
- * pointer to fence is given, the fence will contain the syncpoint value
- * that is reached when operations in the buffer are finished.
+ * Submit job and wait for the jobs completion.
+ *
  */
 
 int
@@ -137,22 +130,9 @@ cleanup:
 }
 
 /*
- * tegra_stream_begin(stream, num_words, fence, num_fences, num_syncpt_incrs,
- *          num_relocs, class_id)
+ * tegra_stream_end(stream)
  *
- * Start constructing a stream.
- *  - num_words refer to the maximum number of words the stream can contain.
- *  - fence is a pointer to a table that contains syncpoint preconditions
- *    before the stream execution can start.
- *  - num_fences indicate the number of elements in the fence table.
- *  - num_relocs indicate the number of memory references in the buffer.
- *  - class_id refers to the class_id that is selected in the beginning of a
- *    stream. If no class id is given, the default class id (=usually the
- *    client device's class) is selected.
- *
- * This function verifies that the current buffer has enough room for holding
- * the whole stream (this is computed using num_words and num_relocs). The
- * function blocks until the stream buffer is ready for use.
+ * Allocate job stuff for the stream.
  */
 
 int
@@ -160,7 +140,6 @@ tegra_stream_begin(struct tegra_stream *stream)
 {
    int ret;
 
-   /* check stream and its state */
    if (!(stream && stream->status == TEGRADRM_STREAM_FREE)) {
       ErrorMsg("Stream status isn't FREE\n");
       return -1;
@@ -172,16 +151,9 @@ tegra_stream_begin(struct tegra_stream *stream)
       return -1;
    }
 
-   ret = drm_tegra_pushbuf_new(&stream->buffer.pushbuf, stream->job);
+   ret = drm_tegra_pushbuf_new(&stream->pushbuf, stream->job);
    if (ret != 0) {
       ErrorMsg("drm_tegra_pushbuf_new() failed %d\n", ret);
-      drm_tegra_job_free(stream->job);
-      return -1;
-   }
-
-   ret = drm_tegra_pushbuf_prepare(stream->buffer.pushbuf, stream->num_words);
-   if (ret != 0) {
-      ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
       drm_tegra_job_free(stream->job);
       return -1;
    }
@@ -209,7 +181,7 @@ tegra_stream_push_reloc(struct tegra_stream *stream,
       return -1;
    }
 
-   ret = drm_tegra_pushbuf_relocate(stream->buffer.pushbuf,
+   ret = drm_tegra_pushbuf_relocate(stream->pushbuf,
                                     bo, offset, 0);
    if (ret != 0) {
       stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
@@ -236,14 +208,14 @@ tegra_stream_push(struct tegra_stream *stream, uint32_t word)
       return -1;
    }
 
-   ret = drm_tegra_pushbuf_prepare(stream->buffer.pushbuf, 1);
+   ret = drm_tegra_pushbuf_prepare(stream->pushbuf, 1);
    if (ret != 0) {
       stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
       ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
       return -1;
    }
 
-   *stream->buffer.pushbuf->ptr++ = word;
+   *stream->pushbuf->ptr++ = word;
 
    return 0;
 }
@@ -265,7 +237,7 @@ tegra_stream_end(struct tegra_stream *stream)
       return -1;
    }
 
-   ret = drm_tegra_pushbuf_sync(stream->buffer.pushbuf,
+   ret = drm_tegra_pushbuf_sync(stream->pushbuf,
                                 DRM_TEGRA_SYNCPT_COND_OP_DONE);
    if (ret != 0) {
       stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
@@ -279,17 +251,16 @@ tegra_stream_end(struct tegra_stream *stream)
 }
 
 /*
- * tegra_reloc (variable, handle, offset)
+ * tegra_reloc (bo, bo_offset, var_offset)
  *
  * This function creates a reloc allocation. The function should be used in
  * conjunction with tegra_stream_push_words.
  */
 
 struct tegra_reloc
-tegra_reloc(const void *var_ptr, struct drm_tegra_bo *bo,
-            uint32_t offset, uint32_t var_offset)
+tegra_reloc(struct drm_tegra_bo *bo, unsigned bo_offset, unsigned var_offset)
 {
-   struct tegra_reloc reloc = {var_ptr, bo, offset, var_offset};
+   struct tegra_reloc reloc = {bo, var_offset, bo_offset};
    return reloc;
 }
 
@@ -302,11 +273,11 @@ tegra_reloc(const void *var_ptr, struct drm_tegra_bo *bo,
  */
 
 int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
-                            unsigned words, int num_relocs, ...)
+                            unsigned words, unsigned num_relocs, ...)
 {
    struct tegra_reloc reloc_arg;
-   va_list ap;
    uint32_t *pushbuf_ptr;
+   va_list ap;
    int ret;
 
    if (!(stream && stream->status == TEGRADRM_STREAM_CONSTRUCT)) {
@@ -314,7 +285,7 @@ int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
       return -1;
    }
 
-   ret = drm_tegra_pushbuf_prepare(stream->buffer.pushbuf, words);
+   ret = drm_tegra_pushbuf_prepare(stream->pushbuf, words);
    if (ret != 0) {
       stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
       ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
@@ -322,19 +293,19 @@ int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
    }
 
    /* Copy the contents */
-   pushbuf_ptr = stream->buffer.pushbuf->ptr;
+   pushbuf_ptr = stream->pushbuf->ptr;
    memcpy(pushbuf_ptr, addr, words * sizeof(uint32_t));
 
    /* Copy relocs */
    va_start(ap, num_relocs);
-   for (; num_relocs; num_relocs--) {
+   while (num_relocs--) {
       reloc_arg = va_arg(ap, struct tegra_reloc);
 
-      stream->buffer.pushbuf->ptr  = pushbuf_ptr;
-      stream->buffer.pushbuf->ptr += reloc_arg.var_offset / sizeof(uint32_t);
+      stream->pushbuf->ptr  = pushbuf_ptr;
+      stream->pushbuf->ptr += reloc_arg.var_offset / sizeof(uint32_t);
 
-      ret = drm_tegra_pushbuf_relocate(stream->buffer.pushbuf, reloc_arg.bo,
-                                       reloc_arg.offset, 0);
+      ret = drm_tegra_pushbuf_relocate(stream->pushbuf,
+                                       reloc_arg.bo, reloc_arg.bo_offset, 0);
       if (ret != 0) {
          stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
          ErrorMsg("drm_tegra_pushbuf_relocate() failed %d\n", ret);
@@ -343,7 +314,7 @@ int tegra_stream_push_words(struct tegra_stream *stream, const void *addr,
    }
    va_end(ap);
 
-   stream->buffer.pushbuf->ptr = pushbuf_ptr + words;
+   stream->pushbuf->ptr = pushbuf_ptr + words;
 
    return ret ? -1 : 0;
 }
