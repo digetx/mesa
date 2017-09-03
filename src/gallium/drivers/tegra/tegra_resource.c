@@ -300,10 +300,12 @@ tegra_blit(struct pipe_context *pcontext, const struct pipe_blit_info *info)
       return;
    }
 
+   tegra_stream_prep(&gr2d->stream, 3);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x009, 0x9));
    tegra_stream_push(&gr2d->stream, 0x0000003a);            /* 0x009 - trigger */
    tegra_stream_push(&gr2d->stream, 0x00000000);            /* 0x00c - cmdsel */
 
+   tegra_stream_prep(&gr2d->stream, 3);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x01e, 0x7));
    tegra_stream_push(&gr2d->stream, 0x00000000);            /* 0x01e - controlsecond */
    /*
@@ -329,35 +331,29 @@ tegra_blit(struct pipe_context *pcontext, const struct pipe_blit_info *info)
    tegra_stream_push(&gr2d->stream, value);                 /* 0x01f - controlmain */
    tegra_stream_push(&gr2d->stream, 0x000000cc);            /* 0x020 - ropfade */
 
+   tegra_stream_prep(&gr2d->stream, 2);
    tegra_stream_push(&gr2d->stream, host1x_opcode_nonincr(0x046, 1));
-
    /*
     * [20:20] destination write tile mode (0: linear, 1: tiled)
     * [ 0: 0] tile mode Y/RGB (0: linear, 1: tiled)
     */
-   value = (dst->tiled << 20) | src->tiled;
-   tegra_stream_push(&gr2d->stream, value);                 /* 0x046 - tilemode */
+   tegra_stream_push(&gr2d->stream,                         /* 0x046 - tilemode */
+                     (dst->tiled << 20) | src->tiled);
 
+   tegra_stream_prep(&gr2d->stream, 11);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x02b, 0xe149));
    tegra_stream_push_reloc(&gr2d->stream, dst->bo, 0);      /* 0x02b - dstba */
-
    tegra_stream_push(&gr2d->stream, dst->pitch);            /* 0x02e - dstst */
-
    tegra_stream_push_reloc(&gr2d->stream, src->bo, 0);      /* 0x031 - srcba */
-
    tegra_stream_push(&gr2d->stream, src->pitch);            /* 0x033 - srcst */
-
-   value = info->dst.box.height << 16 | info->dst.box.width;
-   tegra_stream_push(&gr2d->stream, value);                 /* 0x038 - dstsize */
-
-   value = info->src.box.y << 16 | info->src.box.x;
-   tegra_stream_push(&gr2d->stream, value);                 /* 0x039 - srcps */
-
-   value = info->dst.box.y << 16 | info->dst.box.x;
-   tegra_stream_push(&gr2d->stream, value);                 /* 0x03a - dstps */
+   tegra_stream_push(&gr2d->stream,                         /* 0x038 - dstsize */
+                     info->dst.box.height << 16 | info->dst.box.width);
+   tegra_stream_push(&gr2d->stream,                         /* 0x039 - srcps */
+                     info->src.box.y << 16 | info->src.box.x);
+   tegra_stream_push(&gr2d->stream,                         /* 0x03a - dstps */
+                     info->dst.box.y << 16 | info->dst.box.x);
 
    tegra_stream_end(&gr2d->stream);
-
    tegra_stream_flush(&gr2d->stream);
 }
 
@@ -385,10 +381,12 @@ tegra_fill(struct tegra_channel *gr2d,
       return -1;
    }
 
+   tegra_stream_prep(&gr2d->stream, 3);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x09, 0x09));
    tegra_stream_push(&gr2d->stream, 0x0000003a);           /* 0x009 - trigger */
    tegra_stream_push(&gr2d->stream, 0x00000000);           /* 0x00C - cmdsel */
 
+   tegra_stream_prep(&gr2d->stream, 2);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x1e, 0x07));
    tegra_stream_push(&gr2d->stream, 0x00000000);           /* 0x01e - controlsecond */
 
@@ -408,25 +406,27 @@ tegra_fill(struct tegra_channel *gr2d,
       unreachable("invalid blocksize");
    }
    tegra_stream_push(&gr2d->stream, value);           /* 0x01f - controlmain */
-
    tegra_stream_push(&gr2d->stream, 0x000000cc);      /* 0x020 - ropfade */
 
+   tegra_stream_prep(&gr2d->stream, 3);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x2b, 0x09));
    tegra_stream_push_reloc(&gr2d->stream, dst->bo, 0);/* 0x02b - dstba */
    tegra_stream_push(&gr2d->stream, dst->pitch);      /* 0x02e - dstst */
 
+   tegra_stream_prep(&gr2d->stream, 2);
    tegra_stream_push(&gr2d->stream, host1x_opcode_nonincr(0x35, 1));
-
    tegra_stream_push(&gr2d->stream, fill_value);           /* 0x035 - srcfgc */
 
+   tegra_stream_prep(&gr2d->stream, 2);
    tegra_stream_push(&gr2d->stream, host1x_opcode_nonincr(0x46, 1));
    tegra_stream_push(&gr2d->stream, dst->tiled << 20);     /* 0x046 - tilemode */
 
+   tegra_stream_prep(&gr2d->stream, 2);
    tegra_stream_push(&gr2d->stream, host1x_opcode_mask(0x38, 0x05));
    tegra_stream_push(&gr2d->stream, height << 16 | width); /* 0x038 - dstsize */
    tegra_stream_push(&gr2d->stream, dsty << 16 | dstx);    /* 0x03a - dstps */
-   tegra_stream_end(&gr2d->stream);
 
+   tegra_stream_end(&gr2d->stream);
    tegra_stream_flush(&gr2d->stream);
 
    return 0;

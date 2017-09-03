@@ -75,4 +75,7 @@ int
 tegra_stream_push_words(struct tegra_stream *stream,
                         const uint32_t *words, unsigned words_num);
 
+int
+tegra_stream_prep(struct tegra_stream *stream, uint32_t words_num);
+
 #endif

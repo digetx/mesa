@@ -72,6 +72,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
 
    tegra_emit_state(context);
 
+   tegra_stream_prep(stream, 2);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_VP_ATTRIB_IN_OUT_SELECT, 1));
    tegra_stream_push(stream, ((uint32_t)context->vs->mask << 16) | out_mask);
 
@@ -86,6 +87,7 @@ tegra_draw_vbo(struct pipe_context *pcontext,
       } else
          index_buffer = info->index.resource;
 
+      tegra_stream_prep(stream, 2);
       tegra_stream_push(stream, host1x_opcode_incr(TGR3D_INDEX_PTR, 1));
       tegra_stream_push_reloc(stream, tegra_resource(index_buffer)->bo, index_offset);
    }
@@ -98,17 +100,19 @@ tegra_draw_vbo(struct pipe_context *pcontext,
    value |= TGR3D_VAL(DRAW_PARAMS, FIRST, info->start);
    value |= 0xC0000000; /* flush input caches? */
 
+   tegra_stream_prep(stream, 2);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_DRAW_PARAMS, 1));
    tegra_stream_push(stream, value);
 
    assert(info->count > 0 && info->count < (1 << 11));
    value  = TGR3D_VAL(DRAW_PRIMITIVES, INDEX_COUNT, info->count - 1);
    value |= TGR3D_VAL(DRAW_PRIMITIVES, OFFSET, info->index_size ? 0 : info->start);
+
+   tegra_stream_prep(stream, 2);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_DRAW_PRIMITIVES, 1));
    tegra_stream_push(stream, value);
 
    tegra_stream_end(stream);
-
    tegra_stream_flush(stream);
 }
 

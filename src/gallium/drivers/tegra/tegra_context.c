@@ -29,10 +29,12 @@ static int init(struct tegra_stream *stream)
    }
 
    /* Tegra30 specific stuff */
+   tegra_stream_prep(stream, 17);
    tegra_stream_push(stream, host1x_opcode_incr(0x750, 16));
    for (int i = 0; i < 16; i++)
       tegra_stream_push(stream, 0x00000000);
 
+   tegra_stream_prep(stream, 39);
    tegra_stream_push(stream, host1x_opcode_imm(0x907, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x908, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x909, 0));
@@ -76,6 +78,7 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, host1x_opcode_imm(0x125, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x126, 0));
 
+   tegra_stream_prep(stream, 6);
    tegra_stream_push(stream, host1x_opcode_incr(0x200, 5));
    tegra_stream_push(stream, 0x00000011);
    tegra_stream_push(stream, 0x0000ffff);
@@ -83,12 +86,14 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, 0x00000000);
    tegra_stream_push(stream, 0x00000000);
 
+   tegra_stream_prep(stream, 5);
    tegra_stream_push(stream, host1x_opcode_imm(0x209, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x20a, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x20c, 0x3));
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_LINKER_INSTRUCTION(0), 0));
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_LINKER_INSTRUCTION(1), 0));
 
+   tegra_stream_prep(stream, 26);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_CULL_FACE_LINKER_SETUP, 25));
    tegra_stream_push(stream, 0xb8e00000); /* TGR3D_CULL_FACE_LINKER_SETUP */
    tegra_stream_push(stream, 0x00000000); /* TGR3D_POLYGON_OFFSET_UNITS */
@@ -116,6 +121,7 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, 0x00000000); /* TGR3D_GUARDBAND_DEPTH */
    tegra_stream_push(stream, 0x00000205); /* 0x35b - unknown */
 
+   tegra_stream_prep(stream, 5);
    tegra_stream_push(stream, host1x_opcode_mask(0x352, 0x001b));
    tegra_stream_push(stream, 0x00000000); /* TGR3D_VIEWPORT_X_BIAS */
    tegra_stream_push(stream, 0x00000000); /* TGR3D_VIEWPORT_Y_BIAS */
@@ -123,23 +129,27 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, 0x41800000); /* TGR3D_VIEWPORT_X_SCALE */
    tegra_stream_push(stream, 0x41800000); /* TGR3D_VIEWPORT_Y_SCALE */
 
+   tegra_stream_prep(stream, 3);
    tegra_stream_push(stream, host1x_opcode_mask(0x354, 0x0009));
    tegra_stream_push(stream, u_bitcast_f2u(0.5f - powf(2.0, -21))); /* TGR3D_VIEWPORT_Z_BIAS */
    /* SKIP */
    /* SKIP */
    tegra_stream_push(stream, u_bitcast_f2u(0.5f - powf(2.0, -21))); /* TGR3D_VIEWPORT_Z_SCALE */
 
+   tegra_stream_prep(stream, 4);
    tegra_stream_push(stream, host1x_opcode_incr(TGR3D_GUARDBAND_WIDTH, 3));
    tegra_stream_push(stream, u_bitcast_f2u(1.0f)); /* TGR3D_GUARDBAND_WIDTH */
    tegra_stream_push(stream, u_bitcast_f2u(1.0f)); /* TGR3D_GUARDBAND_HEIGHT */
    tegra_stream_push(stream, u_bitcast_f2u(1.0f)); /* TGR3D_GUARDBAND_DEPTH */
 
+   tegra_stream_prep(stream, 4);
    tegra_stream_push(stream, host1x_opcode_imm(0x363, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x364, 0));
 
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_STENCIL_FRONT1, 0x07ff));
    tegra_stream_push(stream, host1x_opcode_imm(TGR3D_STENCIL_BACK1, 0x07ff));
 
+   tegra_stream_prep(stream, 19);
    tegra_stream_push(stream, host1x_opcode_incr(0x402, 18));
    tegra_stream_push(stream, 0x00000040); /* TGR3D_STENCIL_PARAMS */
    tegra_stream_push(stream, 0x00000310); /* TGR3D_DEPTH_TEST_PARAMS*/
@@ -160,15 +170,18 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, 0x00000000);
    tegra_stream_push(stream, 0x00000000);
 
+   tegra_stream_prep(stream, 4);
    tegra_stream_push(stream, host1x_opcode_imm(0x500, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x501, 0x7));
    tegra_stream_push(stream, host1x_opcode_imm(0x502, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x503, 0));
 
+   tegra_stream_prep(stream, 33);
    tegra_stream_push(stream, host1x_opcode_incr(0x520, 32));
    for (int i = 0; i < 32; i++)
       tegra_stream_push(stream, 0);
 
+   tegra_stream_prep(stream, 13);
    tegra_stream_push(stream, host1x_opcode_imm(0x540, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x542, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x543, 0));
@@ -183,6 +196,7 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, host1x_opcode_imm(0x902, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0x903, 0));
 
+   tegra_stream_prep(stream, 14);
    tegra_stream_push(stream, host1x_opcode_incr(0xa00, 13));
    tegra_stream_push(stream, 0x00000e00);
    tegra_stream_push(stream, 0x00000000);
@@ -198,6 +212,7 @@ static int init(struct tegra_stream *stream)
    tegra_stream_push(stream, 0x00000000);
    tegra_stream_push(stream, 0x00000000);
 
+   tegra_stream_prep(stream, 8);
    tegra_stream_push(stream, host1x_opcode_imm(0xe20, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0xe21, 0));
    tegra_stream_push(stream, host1x_opcode_imm(0xe22, 0));

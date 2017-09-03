@@ -201,17 +201,8 @@ tegra_stream_push_reloc(struct tegra_stream *stream,
 int
 tegra_stream_push(struct tegra_stream *stream, uint32_t word)
 {
-   int ret;
-
    if (!(stream && stream->status == TEGRADRM_STREAM_CONSTRUCT)) {
       ErrorMsg("Stream status isn't CONSTRUCT\n");
-      return -1;
-   }
-
-   ret = drm_tegra_pushbuf_prepare(stream->pushbuf, 1);
-   if (ret != 0) {
-      stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
-      ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
       return -1;
    }
 
@@ -266,4 +257,31 @@ tegra_stream_push_words(struct tegra_stream *stream,
       ret = tegra_stream_push(stream, words[i]);
 
    return ret;
+}
+
+/*
+ * tegra_stream_prep(stream, words_num)
+ *
+ * Reserve space in pushbuf. Data words can't cross BO boundary, space
+ * should be reserved prior to pushing of those data words to avoid it.
+ */
+
+int
+tegra_stream_prep(struct tegra_stream *stream, uint32_t words_num)
+{
+    int ret;
+
+    if (!(stream && stream->status == TEGRADRM_STREAM_CONSTRUCT)) {
+        ErrorMsg("Stream status isn't CONSTRUCT\n");
+        return -1;
+    }
+
+    ret = drm_tegra_pushbuf_prepare(stream->pushbuf, words_num);
+    if (ret != 0) {
+        stream->status = TEGRADRM_STREAM_CONSTRUCTION_FAILED;
+        ErrorMsg("drm_tegra_pushbuf_prepare() failed %d\n", ret);
+        return -1;
+    }
+
+    return 0;
 }
